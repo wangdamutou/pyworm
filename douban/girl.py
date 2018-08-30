@@ -30,7 +30,7 @@ def get_url_list(url):
     except ConnectionError:
         print('Error.')
     # print(url_list)
-    return str(page_title).strip(), url_list
+    return get_valid_name(str(page_title).strip()), url_list
 
 
 # 获取页面上的图片地址
@@ -68,11 +68,28 @@ def save_img_to_file(dict, dir_path):
         if not os.path.exists(target_dir):
             os.mkdir(target_dir)
             for img_url in v:
-                file_name = img_url[-10:]
+                file_name = get_name_by_url(img_url)
                 with open(os.path.join(target_dir, file_name), 'wb') as f:
-                    f.write(request.urlopen(img_url).read())
+                    img_data = request.urlopen(img_url).read()
+                    print('img\'s length is %d' % len(img_data))
+                    f.write(img_data)
                     img_count += 1
     return img_count
+
+
+# 根据url获取文件名
+def get_name_by_url(img_url):
+    public_index = img_url.find('public')
+    file_name = ''
+    if public_index != -1:
+        return get_valid_name(img_url[public_index + 7:])
+    return get_valid_name(img_url[-10:])
+
+
+# 去掉路径中的非法字符
+def get_valid_name(name):
+    invalid_char = r"[\/\\\:\*\?\"\<\>\|]"  # '/ \ : * ? " < > |'
+    return re.sub(invalid_char, "_", name)  # 替换为下划线
 
 
 # 主方法
@@ -99,7 +116,7 @@ def main():
             result = get_img_by_url(url)
             if result is not None:
                 page_url_dict[result[0]] = result[1]
-        dir_path = os.path.join('E:\douban\\', page_title)
+        dir_path = os.path.join('E:\douban1\\', page_title)
         print(page_title, ': ', save_img_to_file(page_url_dict, dir_path))
 
 
